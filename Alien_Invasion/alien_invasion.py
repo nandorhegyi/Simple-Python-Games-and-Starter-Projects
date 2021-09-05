@@ -1,5 +1,6 @@
 import sys
 from time import sleep
+import json
 
 import pygame
 
@@ -54,6 +55,8 @@ class AlienInvasion:
         """Respond to keypresses and mouse events."""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                with open('high_score.txt', 'w') as hs:
+                    json.dump(self.stats.high_score, hs)
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
                 self._check_keydown_events(event)
@@ -95,6 +98,8 @@ class AlienInvasion:
         elif event.key == pygame.K_LEFT:
             self.ship.moving_left = True
         elif event.key == pygame.K_q:
+            with open('high_score.txt', 'w') as hs:
+                json.dump(self.stats.high_score, hs)
             sys.exit()
         elif event.key == pygame.K_SPACE:
             self._fire_bullet()
@@ -111,6 +116,8 @@ class AlienInvasion:
         if len(self.bullets) < self.settings.bullets_allowed:
             new_bullet = Bullet(self)
             self.bullets.add(new_bullet)
+            if self.stats.game_active:
+                pygame.mixer.Sound.play(self.settings.gunshot_sound)
 
     def _update_bullets(self):
         """Update position of bullets and get rid of old bullets."""
@@ -130,6 +137,7 @@ class AlienInvasion:
         collisions = pygame.sprite.groupcollide(self.bullets, self.aliens, True, True)
 
         if collisions:
+            pygame.mixer.Sound.play(self.settings.explosion_sound)
             for aliens in collisions.values():
                 self.stats.score += self.settings.alien_points * len(aliens)
             self.sb.prep_score()
@@ -156,7 +164,7 @@ class AlienInvasion:
 
         # Determine the number of rows of aliens that fit on the screen.
         ship_height = self.ship.rect.height
-        available_space_y = (self.settings.screen_height - (3 * alien_height) - ship_height)
+        available_space_y = (self.settings.screen_height - (5 * alien_height) - ship_height)
         number_rows = available_space_y // (2 * alien_height)
 
         # Create the full fleet of aliens.
@@ -201,24 +209,26 @@ class AlienInvasion:
 
     def _ship_hit(self):
         """Respond to the ship being hit by an alien."""
+        pygame.mixer.Sound.play(self.settings.life_lost_sound)
         if self.stats.ships_left > 0:
             # Decrement ships left, and update scoreboard.
             self.stats.ships_left -= 1
             self.sb.prep_ships()
 
-            # Get rid of any remaining aliens and bullets.
-            self.aliens.empty()
-            self.bullets.empty()
+            if self.stats.ships_left > 0:
+                # Get rid of any remaining aliens and bullets.
+                self.aliens.empty()
+                self.bullets.empty()
 
-            # Create a new fleet and center the ship.
-            self._create_fleet()
-            self.ship.center_ship()
+                # Create a new fleet and center the ship.
+                self._create_fleet()
+                self.ship.center_ship()
 
-            # Pause.
-            sleep(0.5)
-        else:
-            self.stats.game_active = False
-            pygame.mouse.set_visible(True)
+                # Pause.
+                sleep(0.5)
+            else:
+                self.stats.game_active = False
+                pygame.mouse.set_visible(True)
 
     def _check_aliens_bottom(self):
         """Check if any aliens have reached the bottom of the screen."""

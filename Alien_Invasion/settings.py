@@ -1,3 +1,6 @@
+import pygame
+
+
 class Settings:
     """A class to store all settings for Alien Invasion."""
 
@@ -12,9 +15,9 @@ class Settings:
         self.ship_limit = 3
 
         # Bullet settings
-        self.bullet_width = 3
-        self.bullet_height = 15
-        self.bullet_colour = (60, 60, 60)
+        self.bullet_width = 5
+        self.bullet_height = 5
+        self.bullet_colour = (200, 0, 0)
         self.bullets_allowed = 5
 
         # Alien settings
@@ -25,6 +28,11 @@ class Settings:
 
         # How quickly the alien point values increase.
         self.score_scale = 1.5
+
+        # Add sound effects.
+        self.explosion_sound = pygame.mixer.Sound('sound_effects/explosion.wav')
+        self.gunshot_sound = pygame.mixer.Sound('sound_effects/laser.wav')
+        self.life_lost_sound = pygame.mixer.Sound('sound_effects/life_lost.wav')
 
         self.initialize_dynamic_settings()
 
